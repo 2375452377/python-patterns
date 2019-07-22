@@ -100,106 +100,74 @@
        依赖，需要指定其生成顺序；对象的创建过程独立于创建该对象的类；隔离复杂对象的创建和使用，并使得相同的创建过程可以创建不同类
        型的产品。
 """
-from utils.decorators import need_attrs
 
 
-class Meal:
-    """Product：产品角色"""
+# Abstract Building
+class Building(object):
+    def __init__(self):
+        self.build_floor()
+        self.build_size()
 
-    def __init__(self, food=None, drink=None):
-        self._food = food
-        self._drink = drink
-
-    @property
-    def food(self):
-        return self._food
-
-    @food.setter
-    def food(self, food):
-        self._food = food
-
-    @property
-    def drink(self):
-        return self._drink
-
-    @drink.setter
-    def drink(self, drink):
-        self._drink = drink
-
-
-class MealBuilder:
-    """Builder：抽象建造者"""
-
-    def __init__(self, meal=None):
-        self._meal = meal
-
-    def build_drink(self):
+    def build_floor(self):
         raise NotImplementedError
 
-    def build_food(self):
+    def build_size(self):
         raise NotImplementedError
 
-    @property
-    def meal(self):
-        return self._meal
-
-    @meal.setter
-    def meal(self, meal):
-        self._meal = meal
+    def __repr__(self):
+        return 'Floor: {0.floor} | Size: {0.size}'.format(self)
 
 
-class SubMealBuilderA(MealBuilder):
-    """ConcreteBuilder：具体建造者"""
+# Concrete Buildings
+class House(Building):
+    def build_floor(self):
+        self.floor = 'One'
 
-    @need_attrs('meal')
-    def build_drink(self):
-        self.meal.drink = 'drinkA'
-
-    @need_attrs('meal')
-    def build_food(self):
-        self.meal.food = 'foodA'
+    def build_size(self):
+        self.size = 'Big'
 
 
-class SubMealBuilderB(MealBuilder):
-    """ConcreteBuilder：具体建造者"""
+class Flat(Building):
+    def build_floor(self):
+        self.floor = 'More than One'
 
-    @need_attrs('meal')
-    def build_drink(self):
-        self.meal.drink = 'drinkB'
-
-    @need_attrs('meal')
-    def build_food(self):
-        self.meal.food = 'foodB'
+    def build_size(self):
+        self.size = 'Small'
 
 
-class KFCWatier:
-    """Director：指挥者"""
-
-    def __init__(self, meal_builder=None):
-        self._meal_builder = meal_builder
-
-    def construct(self):
-        self.meal_builder.build_drink()
-        self.meal_builder.build_food()
-        return self.meal_builder.meal
-
-    @property
-    def meal_builder(self):
-        return self._meal_builder
-
-    @meal_builder.setter
-    def meal_builder(self, meal_builder):
-        self._meal_builder = meal_builder
+# In some very complex cases, it might be desirable to pull out the building
+# logic into another function (or a method on another class), rather than being
+# in the base class '__init__'. (This leaves you in the strange situation where
+# a concrete class does not have a useful constructor)
 
 
-if __name__ == '__main__':
-    mba = SubMealBuilderA()
-    mba.meal = Meal()
-    kfc = KFCWatier(meal_builder=mba)
-    meal_a = kfc.construct()
-    print(meal_a.food, meal_a.drink)
+class ComplexBuilding(object):
+    def __repr__(self):
+        return 'Floor: {0.floor} | Size: {0.size}'.format(self)
 
-    mbb = SubMealBuilderB(meal=Meal())
-    kfc.meal_builder = mbb
-    meal_b = kfc.construct()
-    print(meal_b.food, meal_b.drink)
+
+class ComplexHouse(ComplexBuilding):
+    def build_floor(self):
+        self.floor = 'One'
+
+    def build_size(self):
+        self.size = 'Big and fancy'
+
+
+def construct_building(cls):
+    building = cls()
+    building.build_floor()
+    building.build_size()
+    return building
+
+
+# Client
+if __name__ == "__main__":
+    house = House()
+    print(house)
+    flat = Flat()
+    print(flat)
+
+    # Using an external constructor function:
+    complex_house = construct_building(ComplexHouse)
+    print(complex_house)
